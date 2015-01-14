@@ -33,9 +33,19 @@ public class Game extends Canvas {
 	private boolean logicNeeded = false;
 	private boolean initLevel = true;
 	private boolean newRound = true;
+	private boolean timerCounting;
+	private boolean missleFired = false;
 	
 	private long roundTime = 2000;
 	private long lastLoopTime;
+	
+	private double angle; 
+	private double velocity; 
+	private double angle1 = 315; 
+	private double angle2 = 315; 
+	private double velocity1 = 50; 
+	private double velocity2 = 50; 
+	int playerNumber = 1; 
 
 	private String state;
 
@@ -116,6 +126,16 @@ public class Game extends Canvas {
 			if (!leftPressed && rightPressed) {
 				player.setSpeedX(player.getDefaultSpeedX());
 			}
+			
+			//	FIRE HANDLING
+
+			if (firePressed && !missleFired) {
+				velocity = (playerNumber == 1)? velocity1 : velocity2;
+				angle = (playerNumber == 1)? angle1 : angle2;
+				objects.addObject(new Missle(this, (int)player.getX()+12, (int)player.getY()-50, velocity, angle));
+				missleFired = true;
+				timerCounting = false;
+			}
 
 			// Perform movement of GameObject's
 			for (int i = 0; i<objects.getSize(); i++) {
@@ -127,6 +147,11 @@ public class Game extends Canvas {
 				g.setColor(objects.getObject(i).getColor());
 				objects.getObject(i).draw(g);
 			}
+			
+			System.out.println(objects.getSize());
+			System.out.println(firePressed);
+			System.out.println(missleFired);
+			
 			g.dispose();
 			strategy.show();
 			
