@@ -47,15 +47,17 @@ public class Game extends Canvas {
 	private long roundTime = 2000;
 	private long lastLoopTime;
 	
-//	private double angle; 
 	private double velocity; 
-//	private double angle1 = 315; 
-//	private double angle2 = 315; 
-//	private double velocity1 = 250; 
-//	private double velocity2 = 250; 
 	int playerNumber = 2; 
+	int windPower;
+	String windImage;
+	
+	private Font bigFont = new Font("SANS_SERIF", Font.BOLD, 36);
+	private Font smallFont = new Font("SANS_SERIF", Font.ITALIC, 16);
 
 	private String state;
+	
+	private Random rand = new Random();
 
 	
 	public Game() {
@@ -93,6 +95,8 @@ public class Game extends Canvas {
 		objects.addObject(player1);
 		objects.addObject(player2);
 		timeBar.setEndOfTime(true);
+		state = "game intro";
+		windPower = 6000;
 		
 	}
 	
@@ -123,6 +127,26 @@ public class Game extends Canvas {
 		}
 	}
 	
+	public void gameIntro() {
+		while(!enterPressed) {
+			Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
+			g.setFont(bigFont);
+			g.setColor(Color.black);
+			g.fillRect(0,0,800,600);
+			g.setColor(Color.white);
+			g.drawString("Press Enter to start", 200, 250);
+			g.setFont(smallFont);
+			g.drawString("Z / X - movement", 200, 300);
+			g.drawString("UP / DOWN - angle", 200, 320);
+			g.drawString("LEFT / RIGHT - power", 200, 340);
+			g.drawString("TAB - change weapon", 200, 360);
+			g.drawString("SPACE - shot", 200, 380);
+			g.dispose();
+			strategy.show();
+		}
+		state = "game";
+	}
+	
 	public void changePlayer() {
 		if (playerNumber == 1) {
 			player1.setSpeedX(0);
@@ -135,13 +159,34 @@ public class Game extends Canvas {
 		}
 		timeBar.reset();
 		timeBar.startCounting();
+		randomizeWindPower();
 		missleFired = false;
+	}
+	
+	public void randomizeWindPower() {
+		windPower = rand.nextInt(12) * 1000 - 6000;
+		switch (windPower) {
+			case -6000 : windImage = "------>"; break;
+			case -5000 : windImage = "----->"; break;
+			case -4000 : windImage = "---->"; break;
+			case -3000 : windImage = "--->"; break;
+			case -2000 : windImage = "-->"; break;
+			case -1000 : windImage = "->"; break;
+			case 0 : windImage = ""; break;
+			case 1000 : windImage = "<-"; break;
+			case 2000 : windImage = "<--"; break;
+			case 3000 : windImage = "<---"; break;
+			case 4000 : windImage = "<----"; break;
+			case 5000 : windImage = "<-----"; break;
+			case 6000 : windImage = "<------"; break;
+			
+		}
+		System.out.println(windImage);
 	}
 		
 	public void gameLoop() {
 
 		while (!gameOver) {
-
 			long deltaTime = System.currentTimeMillis() - lastLoopTime;
 			lastLoopTime = System.currentTimeMillis();
 
@@ -192,16 +237,30 @@ public class Game extends Canvas {
 
 			// Perform movement of GameObject's
 			for (int i = 0; i<objects.getSize(); i++) {
-				objects.getObject(i).move(deltaTime);
+				if (!objects.getObject(i).getClass().getSimpleName().equals("Tank") || !missleFired) {
+					objects.getObject(i).move(deltaTime); 
+				}
+			}
+			
+			// Collision check
+			for (int i1 = 0; i1 < objects.getSize(); i1++) {
+				for(int i2 = i1+1; i2 < objects.getSize(); i2++) {
+					if(objects.getObject(i1).collisionCheck(objects.getObject(i2))) {
+						objects.getObject(i1).inCollision(objects.getObject(i2));
+					}
+				}	
 			}
 			
 			// Deleting of destroyed GameObject's
 			for (int i = 0; i < objects.getSize(); i++) {
-				if (objects.getObject(i).getIsDestroyed() == true) {
+				if (objects.getObject(i).getIsDestroyed()) {
 					objectsToDelete.add(objects.getObject(i));
 					if (objects.getObject(i).getClass().getSimpleName().equals("Missle")) {
 							changePlayer();
-							
+					}
+					if (objects.getObject(i).getClass().getSimpleName().equals("Tank")) {
+						state = "gameOver";
+						gameOver = true;
 					}
 				}
 			}
@@ -215,12 +274,27 @@ public class Game extends Canvas {
 			g.setColor(timeBar.getColor());
 			timeBar.draw(g);
 			
-			// Draw informations
+			// Draw information
 			g.setColor(new Color(255, 0, 0));
 			g.drawString("angle = " + Math.abs(((Tank)player).getAngle()), 350, 35);
 			g.drawString("power = " +((Tank)player).getPower(), 450, 35);
-			if (playerNumber == 1) { g.drawString("Player 1" , 650, 35); }
-			if (playerNumber == 2) { g.drawString("Player 2" , 650, 35); }
+			if (playerNumber == 1) { g.drawString("Player 1" , 550, 35); }
+			if (playerNumber == 2) { g.drawString("Player 2" , 550, 35); }
+			g.drawString("wind: " + windImage, 620, 35);
+			
+			
+			if (gameOver) {
+				changePlayer();
+				g.setColor(Color.black);
+				g.fillRect(0,0,800,600);
+				g.setColor(Color.white);
+				g.setFont(bigFont);
+				g.drawString("Player " + playerNumber + " won!", 280, 250);
+				g.setFont(smallFont);
+				g.drawString("Press Escape to exit", 320, 300);
+				g.dispose();
+				strategy.show();
+			}
 			
 			g.dispose();
 			strategy.show();
@@ -234,7 +308,8 @@ public class Game extends Canvas {
 	public static void main(String argv[]) {
 		Game game = new Game();
 		while(!game.gameOver) {
-			game.gameLoop();
+			if (game.state.equals("game")) { game.gameLoop(); }
+			if (game.state.equals("game intro")) { game.gameIntro(); }
 		}
 	}
 }

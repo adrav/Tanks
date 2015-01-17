@@ -43,9 +43,9 @@ public class Physics {
 
 		// End conditions - SPRAWDZONE
 		vX = v0X - windAcc*time;
-		vY = v0Y - g*time;
+		vY = v0Y + g*time;
 		deltaX = v0X*time - (windAcc*pow(time, 2))/2;
-		deltaY = v0Y*time - (g*pow(time, 2))/2;
+		deltaY = v0Y*time + (g*pow(time, 2))/2;
 
 		v = sqrt(pow(vX, 2) + pow(vY, 2));
 

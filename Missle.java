@@ -44,7 +44,7 @@ public class Missle extends GameObject {
 
 	public void move(long deltaTime) {
 
-		movementData = ph.simpleTrajectory(velocity, angle, deltaTime);
+		movementData = ph.advancedTrajectory(velocity, angle, gameInstance.windPower, deltaTime);
 		x += movementData.get("deltaX");
 		y += movementData.get("deltaY");
 		velocity = movementData.get("velocity");

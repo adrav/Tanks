@@ -25,8 +25,6 @@ public class Tank extends GameObject {
 	private Polygon leftTankShape;
 	private Polygon rightTankShape;
 
-	private boolean isDestroyed;
-
 	// Information of weapons left. List of pairs (name, amount).
 	
 	private HashMap<String, Integer> weapons = new HashMap<String, Integer>();
@@ -44,7 +42,7 @@ public class Tank extends GameObject {
 		bouncersLeft = bouncers;
 		bombsLeft = bombs;
 		setMisslesLeft(missles); // -1 = Infinite
-		setDestroyed(false);
+		isDestroyed=false;
 
 		this.weapons.put("Bouncers", bouncers);
 		this.weapons.put("Bombs", bombs);
@@ -71,9 +69,14 @@ public class Tank extends GameObject {
 	}
 
 	public void inCollision(GameObject other) {
-		if(other.getClass().getSimpleName().equals("MissleObject")) {
+		if(other.getClass().getSimpleName().equals("Missle")) {
 			other.setIsDestroyed(true);
-			setDestroyed(true);
+			this.setIsDestroyed(true);
+		}
+		
+		if(other.getClass().getSimpleName().equals("Tank")) {
+			other.setIsDestroyed(true);
+			this.setIsDestroyed(true);
 		}
 
 		// kolizja z przeszkodˆ
@@ -134,14 +137,6 @@ public class Tank extends GameObject {
 
 	public void setRightTankShape(Polygon rightTankShape) {
 		this.rightTankShape = rightTankShape;
-	}
-
-	public boolean isDestroyed() {
-		return isDestroyed;
-	}
-
-	public void setDestroyed(boolean isDestroyed) {
-		this.isDestroyed = isDestroyed;
 	}
 
 }
