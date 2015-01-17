@@ -31,16 +31,16 @@ public class Tank extends GameObject {
 	
 	private HashMap<String, Integer> weapons = new HashMap<String, Integer>();
 	
-	public Tank(Game game, int x, int y, int bouncers, int bombs, int missles) {
+	public Tank(Game game, int x, int y, int bouncers, int bombs, int missles, double angle, int power) {
 		super(game, x, y);
 		defaultSpeedX = 100;
 		defaultSpeedY = 0;
-		speedX = defaultSpeedX;
-		speedY = defaultSpeedY;
+		speedX = 0;
+		speedY = 0;
 		color = new Color(0, 0, 255);
 		shape = new Rectangle(30, 30);	
-		power = 10;
-		angle = 45;
+		this.power = power;
+		this.angle = angle;
 		bouncersLeft = bouncers;
 		bombsLeft = bombs;
 		setMisslesLeft(missles); // -1 = Infinite

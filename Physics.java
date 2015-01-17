@@ -23,7 +23,7 @@ public class Physics {
 	private double deltaY;
 
 	// physics constants
-	private final double g = 10; // [m/s^2]
+	private final double g = 100; // [m/s^2]
 
 	// calculates power, angle and movement since in current moment
 	// angle in degrees is measured counterclockwise from x axis

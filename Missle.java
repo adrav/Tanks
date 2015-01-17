@@ -49,6 +49,10 @@ public class Missle extends GameObject {
 		y += movementData.get("deltaY");
 		velocity = movementData.get("velocity");
 		angle = movementData.get("angle");
+		if (x>gameInstance.getWidth() + 100 || y > gameInstance.getHeight()+100 
+				|| x < -50) {
+			isDestroyed = true;
+		}
 
 	}
 
