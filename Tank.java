@@ -1,6 +1,10 @@
 package tanks;
 
 import java.awt.Color;
+
+import static java.lang.Math.*;
+
+import java.awt.Graphics2D;
 import java.awt.Polygon;
 import java.awt.Rectangle;
 import java.util.HashMap;
@@ -24,6 +28,12 @@ public class Tank extends GameObject {
 	// Common for all tanks shaps
 	private Polygon leftTankShape;
 	private Polygon rightTankShape;
+	
+	private String direction;
+	
+	//public Polygon shape;
+	
+	private int dx, dy;
 
 	// Information of weapons left. List of pairs (name, amount).
 	
@@ -36,7 +46,10 @@ public class Tank extends GameObject {
 		speedX = 0;
 		speedY = 0;
 		color = new Color(0, 0, 255);
-		shape = new Rectangle(30, 30);	
+		int[] xPoints = {21, 42, 13};
+		int[] yPoints = {10, 11, 12};
+		//shape = new Polygon(xPoints, yPoints, 3);
+		shape = new Rectangle(x, y, 30, 30);
 		this.power = power;
 		this.angle = angle;
 		bouncersLeft = bouncers;
@@ -62,7 +75,7 @@ public class Tank extends GameObject {
 		if (x<30 && speedX<0) {
 			speedX = 0;
 		}
-		if (x>740 && speedX>0) {
+		if (x>1140 && speedX>0) {
 			speedX = 0;
 		}
 		super.move(deltaTime);
@@ -78,9 +91,25 @@ public class Tank extends GameObject {
 			other.setIsDestroyed(true);
 			this.setIsDestroyed(true);
 		}
-
-		// kolizja z przeszkodˆ
-
+		
+		if(other.getClass().getSimpleName().equals("BackgroundObject")) {
+			other.setIsDestroyed(true);
+			this.setIsDestroyed(true);
+		}
+	}
+	
+	public void draw(Graphics2D g) {
+		g.fillRect((int)x, (int)y, (int)shape.getWidth(), (int)shape.getHeight());
+		// Draw line
+		if(this.direction.equals("right")) {
+			dx = (int) (power*cos(toRadians(360-angle)))/5;
+			dy = (int) (power*sin(toRadians(360-angle)))/5;
+			g.drawLine((int)x + 15, (int)y, (int)x + 15 + dx , (int)y - dy);
+		} else {
+			dx = (int) (power*cos(toRadians(angle-180)))/5;
+			dy = (int) (power*sin(toRadians(angle-180)))/5;
+			g.drawLine((int)x + 15, (int)y, (int)x + 15 - dx , (int)y - dy);
+		}
 	}
 	
 	public void setPower(int power) {
@@ -137,6 +166,14 @@ public class Tank extends GameObject {
 
 	public void setRightTankShape(Polygon rightTankShape) {
 		this.rightTankShape = rightTankShape;
+	}
+
+	public String getDirection() {
+		return direction;
+	}
+
+	public void setDirection(String direction) {
+		this.direction = direction;
 	}
 
 }

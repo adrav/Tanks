@@ -4,6 +4,7 @@ import java.awt.Color;
 import java.awt.Dimension;
 import java.awt.Font;
 import java.awt.Graphics2D;
+import java.awt.Rectangle;
 import java.awt.event.KeyAdapter;
 import java.awt.event.KeyEvent;
 import java.awt.event.WindowAdapter;
@@ -22,6 +23,8 @@ public class Game extends Canvas {
 	private GameObject player;
 	private GameObject player1;
 	private GameObject player2;
+	private GameObject ground;
+	private GameObject wall;
 	private ObjectHolder objects;
 	private TimeBar timeBar; 
 	
@@ -62,14 +65,14 @@ public class Game extends Canvas {
 	
 	public Game() {
 		
-		setBounds(0,0,800,600);
+		setBounds(0,0,1200,600);
 		setIgnoreRepaint(true);
 		requestFocus();
 
 		JFrame mainWindow = new JFrame("Tanks (written by Micha¸ Czop)");
 		
 		JPanel panel = (JPanel) mainWindow.getContentPane();
-		panel.setPreferredSize(new Dimension(800,600));
+		panel.setPreferredSize(new Dimension(1200,600));
 		panel.setLayout(null);
 		panel.add(this);
 		
@@ -89,14 +92,23 @@ public class Game extends Canvas {
 		});
 
 		objects = ObjectHolder.getInstance();
-		player1 = new Tank(this, 180, 550, 2, 2, -1, -45, 250);
-		player2 = new Tank(this, 580, 550, 2, 2, -1, -135, 250);
+		player1 = new Tank(this, 200, 550, 2, 2, -1, 315, 250);
+		player2 = new Tank(this, 980, 550, 2, 2, -1, 225, 250);
 		timeBar = new TimeBar(20, 20, 300, 20, new Color(0, 255, 0), 20000);
+		ground = new BackgroundObject(this, 0, 580, new Rectangle (1200, 30));
+		ground.setColor(new Color(0, 255, 0));
+		wall = new BackgroundObject(this, 585, 280, new Rectangle (30, 300));
+		wall.setColor(new Color(155, 0, 0));
 		objects.addObject(player1);
 		objects.addObject(player2);
+		objects.addObject(ground);
+		objects.addObject(wall);
 		timeBar.setEndOfTime(true);
 		state = "game intro";
 		windPower = 6000;
+		((Tank) player1).setDirection("right");
+		((Tank) player2).setDirection("left");
+		randomizeWindPower();
 		
 	}
 	
@@ -132,7 +144,7 @@ public class Game extends Canvas {
 			Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
 			g.setFont(bigFont);
 			g.setColor(Color.black);
-			g.fillRect(0,0,800,600);
+			g.fillRect(0,0,1200,600);
 			g.setColor(Color.white);
 			g.drawString("Press Enter to start", 200, 250);
 			g.setFont(smallFont);
@@ -159,29 +171,32 @@ public class Game extends Canvas {
 		}
 		timeBar.reset();
 		timeBar.startCounting();
-		randomizeWindPower();
 		missleFired = false;
 	}
 	
+	public void mirrorPlayerAngle(Tank p) {
+		p.setAngle(540 - p.getAngle());
+	}
+	
 	public void randomizeWindPower() {
-		windPower = rand.nextInt(12) * 1000 - 6000;
+		//windPower = rand.nextInt(12) * 1000 - 6000;
+		windPower = rand.nextInt(12) * 500 - 3000;
 		switch (windPower) {
-			case -6000 : windImage = "------>"; break;
-			case -5000 : windImage = "----->"; break;
-			case -4000 : windImage = "---->"; break;
-			case -3000 : windImage = "--->"; break;
-			case -2000 : windImage = "-->"; break;
-			case -1000 : windImage = "->"; break;
+			case -3000 : windImage = "------>"; break;
+			case -2500 : windImage = "----->"; break;
+			case -2000 : windImage = "---->"; break;
+			case -1500 : windImage = "--->"; break;
+			case -1000 : windImage = "-->"; break;
+			case -500 : windImage = "->"; break;
 			case 0 : windImage = ""; break;
-			case 1000 : windImage = "<-"; break;
-			case 2000 : windImage = "<--"; break;
-			case 3000 : windImage = "<---"; break;
-			case 4000 : windImage = "<----"; break;
-			case 5000 : windImage = "<-----"; break;
-			case 6000 : windImage = "<------"; break;
-			
+			case 500 : windImage = "<-"; break;
+			case 1000 : windImage = "<--"; break;
+			case 1500 : windImage = "<---"; break;
+			case 2000 : windImage = "<----"; break;
+			case 2500 : windImage = "<-----"; break;
+			case 3000 : windImage = "<------"; break;
 		}
-		System.out.println(windImage);
+		System.out.println(windPower);
 	}
 		
 	public void gameLoop() {
@@ -189,25 +204,34 @@ public class Game extends Canvas {
 		while (!gameOver) {
 			long deltaTime = System.currentTimeMillis() - lastLoopTime;
 			lastLoopTime = System.currentTimeMillis();
-
 			Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
 			g.setColor(Color.black);
-			g.fillRect(0,0,800,600);
+			g.fillRect(0,0,1200,600);
 			
 			//Change player
 			if(timeBar.isEndOfTime()) {
 				changePlayer();
 			}
 			
-			//Addjust size of imeBar
+			//Addjust size of TimeBar
 			if(!missleFired) { timeBar.adjustSizeToTimeLeft(lastLoopTime, "x"); }
 			
 			//Handle angle
-			if(upPressed && ((Tank) player).getAngle() > -180 && !missleFired) {
+			if(((Tank) player).getDirection().equals("right")) {
+				if(upPressed && ((Tank) player).getAngle() > 270 && !missleFired) {
 					((Tank) player).setAngle(((Tank) player).getAngle() - 0.5);
-			}
-			if(downPressed && ((Tank) player).getAngle() < 0 && !missleFired) {
+				}
+				if(downPressed && ((Tank) player).getAngle() < 360 && !missleFired) {
 					((Tank) player).setAngle(((Tank) player).getAngle() + 0.5);
+				}
+			}
+			if(((Tank) player).getDirection().equals("left")) {
+				if(upPressed && ((Tank) player).getAngle() < 270 && !missleFired) {
+					((Tank) player).setAngle(((Tank) player).getAngle() + 0.5);
+				}
+				if(downPressed && ((Tank) player).getAngle() > 180 && !missleFired) {
+					((Tank) player).setAngle(((Tank) player).getAngle() - 0.5);
+				}
 			}
 			
 			//Handle power
@@ -221,14 +245,21 @@ public class Game extends Canvas {
 			//Handle movement of player
 			player.setSpeedX(0);
 			if (zPressed && !xPressed) {
+				if(((Tank) player).getDirection().equals("right") && !missleFired) {
+					mirrorPlayerAngle((Tank) player);
+				}
 				player.setSpeedX(-(player.getDefaultSpeedX()));
+				((Tank) player).setDirection("left");
 			}
 			if (!zPressed && xPressed) {
+				if(((Tank) player).getDirection().equals("left") && !missleFired) {
+					mirrorPlayerAngle((Tank) player);
+				}
 				player.setSpeedX(player.getDefaultSpeedX());
+				((Tank) player).setDirection("right");
 			}
 			
 			//	FIRE HANDLING
-
 			if (firePressed && !missleFired) {
 				objects.addObject(new Missle(this, (int)player.getX()+12, (int)player.getY()-50, ((Tank)player).getPower(), ((Tank) player).getAngle()));
 				missleFired = true;
@@ -276,17 +307,16 @@ public class Game extends Canvas {
 			
 			// Draw information
 			g.setColor(new Color(255, 0, 0));
-			g.drawString("angle = " + Math.abs(((Tank)player).getAngle()), 350, 35);
+			g.drawString("angle = " + ((Tank)player).getAngle(), 350, 35);
 			g.drawString("power = " +((Tank)player).getPower(), 450, 35);
 			if (playerNumber == 1) { g.drawString("Player 1" , 550, 35); }
 			if (playerNumber == 2) { g.drawString("Player 2" , 550, 35); }
 			g.drawString("wind: " + windImage, 620, 35);
 			
-			
 			if (gameOver) {
 				changePlayer();
 				g.setColor(Color.black);
-				g.fillRect(0,0,800,600);
+				g.fillRect(0,0,1200,600);
 				g.setColor(Color.white);
 				g.setFont(bigFont);
 				g.drawString("Player " + playerNumber + " won!", 280, 250);

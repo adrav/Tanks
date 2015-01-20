@@ -1,6 +1,7 @@
 package tanks;
 
 import java.awt.Color;
+import java.awt.Graphics2D;
 import java.awt.Rectangle;
 import java.util.HashMap;
 
@@ -17,7 +18,6 @@ public class Missle extends GameObject {
 	HashMap<String, Double> movementData = new HashMap<String, Double>();
 
 	public Missle(Game game, int x, int y, double velocity, double angle) {
-
 		super(game, x, y);
 		defaultColor = new Color(0, 0, 255);
 		color = defaultColor;
@@ -25,7 +25,6 @@ public class Missle extends GameObject {
 		this.velocity = velocity;
 		this.angle = angle;
 		shape = new Rectangle(x, y, 20, 20);
-
 	}
 
 	public void setVelocity(double velocity) {
@@ -42,8 +41,8 @@ public class Missle extends GameObject {
 		return angle;
 	}
 
+	@Override
 	public void move(long deltaTime) {
-
 		movementData = ph.advancedTrajectory(velocity, angle, gameInstance.windPower, deltaTime);
 		x += movementData.get("deltaX");
 		y += movementData.get("deltaY");
@@ -53,12 +52,18 @@ public class Missle extends GameObject {
 				|| x < -50) {
 			isDestroyed = true;
 		}
-
+	}
+	
+	@Override
+	public void draw(Graphics2D g) {
+		g.fillOval((int)x, (int)y, (int)(shape.getWidth()/2), (int)(shape.getHeight())/2);
 	}
 
 	@Override
 	void inCollision(GameObject other) {
-		// TODO Auto-generated method stub
+		if(other.getClass().getSimpleName().equals("BackgroundObject")) {
+			this.setIsDestroyed(true);
+		}
 		
 	}
 }
