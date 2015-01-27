@@ -5,9 +5,13 @@ import java.awt.Rectangle;
 
 public class BackgroundObject extends GameObject{
 	
-	public BackgroundObject(Game game, int x, int y, Rectangle shape) {
+	private boolean causesBounce;
+	
+	public BackgroundObject(Game game, int x, int y, Rectangle shape, boolean causesBounce) {
 		super(game, x, y);
 		this.shape = shape;
+		this.causesBounce = causesBounce;
+		
 	}
 
 	public void draw(Graphics2D g) {
@@ -16,9 +20,24 @@ public class BackgroundObject extends GameObject{
 	
 	public void inCollision(GameObject other) {
 		if(other.getClass().getSimpleName().equals("Missle")) {
-			other.setIsDestroyed(true);
+			other.inCollision(this);
 		}
-		
+		if(other.getClass().getSimpleName().equals("Bomb")) {
+			other.inCollision(this);
+		}
+		if(other.getClass().getSimpleName().equals("Bouncer")) {
+			other.inCollision(this);
+		}
+		if(other.getClass().getSimpleName().equals("Tank")) {
+			other.inCollision(this);
+		}
 	}
 
+	public boolean getCausesBounce() {
+		return causesBounce;
+	}
+
+	public void setCausesBounce(boolean causesBounce) {
+		this.causesBounce = causesBounce;
+	}
 }

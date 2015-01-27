@@ -25,6 +25,10 @@ public class Game extends Canvas {
 	private GameObject player2;
 	private GameObject ground;
 	private GameObject wall;
+	private GameObject leftBrick1;
+	private GameObject leftBrick2;
+	private GameObject rightBrick1;
+	private GameObject rightBrick2;
 	private ObjectHolder objects;
 	private TimeBar timeBar; 
 	
@@ -35,7 +39,7 @@ public class Game extends Canvas {
 	private boolean rightPressed = false;
 	private boolean upPressed = false;
 	private boolean downPressed = false;
-	private boolean tabPressed = false;
+	private boolean shiftPressed = false;
 	private boolean firePressed = false;
 	private boolean enterPressed = false;
 	private boolean zPressed = false;
@@ -46,7 +50,7 @@ public class Game extends Canvas {
 	private boolean newRound = true;
 	private boolean timerCounting;
 	private boolean missleFired = false;
-	
+	private Weapon playerWeapon;
 	private long roundTime = 2000;
 	private long lastLoopTime;
 	
@@ -92,17 +96,29 @@ public class Game extends Canvas {
 		});
 
 		objects = ObjectHolder.getInstance();
-		player1 = new Tank(this, 200, 550, 2, 2, -1, 315, 250);
-		player2 = new Tank(this, 980, 550, 2, 2, -1, 225, 250);
+		player1 = new Tank(this, 200, 550, 2, 2, 99, 315, 250);
+		player2 = new Tank(this, 980, 550, 2, 2, 99, 225, 250);
 		timeBar = new TimeBar(20, 20, 300, 20, new Color(0, 255, 0), 20000);
-		ground = new BackgroundObject(this, 0, 580, new Rectangle (1200, 30));
+		ground = new BackgroundObject(this, 0, 580, new Rectangle (1200, 30), true);
 		ground.setColor(new Color(0, 255, 0));
-		wall = new BackgroundObject(this, 585, 280, new Rectangle (30, 300));
+		wall = new BackgroundObject(this, 585, 330, new Rectangle (30, 250), false);
 		wall.setColor(new Color(155, 0, 0));
+		leftBrick1 = new BackgroundObject(this, 0, 570, new Rectangle (10, 10), false);
+		leftBrick1.setColor(new Color(255, 0, 0));
+		leftBrick2 = new BackgroundObject(this, 450, 570, new Rectangle (10, 10), false);
+		leftBrick2.setColor(new Color(255, 0, 0));
+		rightBrick1 = new BackgroundObject(this, 730, 570, new Rectangle (10, 10), false);
+		rightBrick1.setColor(new Color(255, 0, 0));
+		rightBrick2 = new BackgroundObject(this, 1190, 570, new Rectangle (10, 10), false);
+		rightBrick2.setColor(new Color(255, 0, 0));
 		objects.addObject(player1);
 		objects.addObject(player2);
 		objects.addObject(ground);
 		objects.addObject(wall);
+		objects.addObject(leftBrick1);
+		objects.addObject(leftBrick2);
+		objects.addObject(rightBrick1);
+		objects.addObject(rightBrick2);
 		timeBar.setEndOfTime(true);
 		state = "game intro";
 		windPower = 6000;
@@ -118,7 +134,7 @@ public class Game extends Canvas {
 			if(e.getKeyCode() == KeyEvent.VK_RIGHT) { rightPressed = true; }
 			if(e.getKeyCode() == KeyEvent.VK_UP) { upPressed = true; }
 			if(e.getKeyCode() == KeyEvent.VK_DOWN) { downPressed = true; }
-			if(e.getKeyCode() == KeyEvent.VK_TAB) { tabPressed = true; }
+			if(e.getKeyCode() == KeyEvent.VK_SHIFT) { shiftPressed = true; }
 			if(e.getKeyCode() == KeyEvent.VK_SPACE) { firePressed = true; }
 			if(e.getKeyCode() == KeyEvent.VK_ENTER) { enterPressed = true; }
 			if(e.getKeyCode() == KeyEvent.VK_Z) { zPressed = true; }
@@ -131,7 +147,7 @@ public class Game extends Canvas {
 			if(e.getKeyCode() == KeyEvent.VK_RIGHT) {rightPressed = false;}
 			if(e.getKeyCode() == KeyEvent.VK_UP) { upPressed = false; }
 			if(e.getKeyCode() == KeyEvent.VK_DOWN) { downPressed = false; }
-			if(e.getKeyCode() == KeyEvent.VK_TAB) { tabPressed = false; }
+			if(e.getKeyCode() == KeyEvent.VK_SHIFT) { shiftPressed = false; }
 			if(e.getKeyCode() == KeyEvent.VK_SPACE) {firePressed = false;}
 			if(e.getKeyCode() == KeyEvent.VK_Z) { zPressed = false; }
 			if(e.getKeyCode() == KeyEvent.VK_X) { xPressed = false; }
@@ -151,7 +167,7 @@ public class Game extends Canvas {
 			g.drawString("Z / X - movement", 200, 300);
 			g.drawString("UP / DOWN - angle", 200, 320);
 			g.drawString("LEFT / RIGHT - power", 200, 340);
-			g.drawString("TAB - change weapon", 200, 360);
+			g.drawString("SHIFT - change weapon", 200, 360);
 			g.drawString("SPACE - shot", 200, 380);
 			g.dispose();
 			strategy.show();
@@ -171,6 +187,7 @@ public class Game extends Canvas {
 		}
 		timeBar.reset();
 		timeBar.startCounting();
+		playerWeapon = (((Tank) player).getWeapon());
 		missleFired = false;
 	}
 	
@@ -179,7 +196,6 @@ public class Game extends Canvas {
 	}
 	
 	public void randomizeWindPower() {
-		//windPower = rand.nextInt(12) * 1000 - 6000;
 		windPower = rand.nextInt(12) * 500 - 3000;
 		switch (windPower) {
 			case -3000 : windImage = "------>"; break;
@@ -196,7 +212,6 @@ public class Game extends Canvas {
 			case 2500 : windImage = "<-----"; break;
 			case 3000 : windImage = "<------"; break;
 		}
-		System.out.println(windPower);
 	}
 		
 	public void gameLoop() {
@@ -211,6 +226,14 @@ public class Game extends Canvas {
 			//Change player
 			if(timeBar.isEndOfTime()) {
 				changePlayer();
+			}
+			
+			//Change weapon
+			if(shiftPressed) {
+				((Tank) player).changeWeapon();
+				playerWeapon = (((Tank) player).getWeapon());
+				shiftPressed = false;
+				
 			}
 			
 			//Addjust size of TimeBar
@@ -261,9 +284,18 @@ public class Game extends Canvas {
 			
 			//	FIRE HANDLING
 			if (firePressed && !missleFired) {
-				objects.addObject(new Missle(this, (int)player.getX()+12, (int)player.getY()-50, ((Tank)player).getPower(), ((Tank) player).getAngle()));
-				missleFired = true;
-				timerCounting = false;
+				if (((Tank) player).getWeaponAmount(((Tank) player).getWeapon()) > 0) {
+					if (((Tank) player).getWeapon().equals(Weapon.MISSLE)) {
+						objects.addObject(new Missle(this, (int)player.getX()+12, (int)player.getY()-50, ((Tank)player).getPower(), ((Tank) player).getAngle()));
+					} else if ((((Tank) player).getWeapon().equals(Weapon.BOMB))) {
+						objects.addObject(new Bomb(this, (int)player.getX()+12, (int)player.getY()-50, ((Tank)player).getPower(), ((Tank) player).getAngle()));
+					} else if (((Tank) player).getWeapon().equals(Weapon.BOUNCER)) {
+						objects.addObject(new Bouncer(this, (int)player.getX()+12, (int)player.getY()-50, ((Tank)player).getPower(), ((Tank) player).getAngle()));
+					}
+					missleFired = true;
+					timerCounting = false;
+					((Tank) player).setWeaponAmount(playerWeapon, ((Tank) player).getWeaponAmount(playerWeapon)-1);
+				}
 			}
 
 			// Perform movement of GameObject's
@@ -272,6 +304,14 @@ public class Game extends Canvas {
 					objects.getObject(i).move(deltaTime); 
 				}
 			}
+			
+			//Draw GameObject's
+			for (int i = 0; i<objects.getSize(); i++) {
+				g.setColor(objects.getObject(i).getColor());
+				objects.getObject(i).draw(g);
+			}
+			g.setColor(timeBar.getColor());
+			timeBar.draw(g);
 			
 			// Collision check
 			for (int i1 = 0; i1 < objects.getSize(); i1++) {
@@ -286,7 +326,7 @@ public class Game extends Canvas {
 			for (int i = 0; i < objects.getSize(); i++) {
 				if (objects.getObject(i).getIsDestroyed()) {
 					objectsToDelete.add(objects.getObject(i));
-					if (objects.getObject(i).getClass().getSimpleName().equals("Missle")) {
+					if (objects.getObject(i).getClass().getSimpleName().equals("Missle") || objects.getObject(i).getClass().getSuperclass().getSimpleName().equals("Missle")){
 							changePlayer();
 					}
 					if (objects.getObject(i).getClass().getSimpleName().equals("Tank")) {
@@ -297,14 +337,6 @@ public class Game extends Canvas {
 			}
 			objects.deleteObject(objectsToDelete);
 			
-			//Draw GameObject's
-			for (int i = 0; i<objects.getSize(); i++) {
-				g.setColor(objects.getObject(i).getColor());
-				objects.getObject(i).draw(g);
-			}
-			g.setColor(timeBar.getColor());
-			timeBar.draw(g);
-			
 			// Draw information
 			g.setColor(new Color(255, 0, 0));
 			g.drawString("angle = " + ((Tank)player).getAngle(), 350, 35);
@@ -312,6 +344,7 @@ public class Game extends Canvas {
 			if (playerNumber == 1) { g.drawString("Player 1" , 550, 35); }
 			if (playerNumber == 2) { g.drawString("Player 2" , 550, 35); }
 			g.drawString("wind: " + windImage, 620, 35);
+			g.drawString("weapon: " + playerWeapon + " - " + ((Tank) player).getWeaponAmount(playerWeapon) + " left.", 720, 35);
 			
 			if (gameOver) {
 				changePlayer();

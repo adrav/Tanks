@@ -30,14 +30,11 @@ public class Tank extends GameObject {
 	private Polygon rightTankShape;
 	
 	private String direction;
+	private String currentWeapon;
 	
-	//public Polygon shape;
+	private Weapon weapon;
 	
 	private int dx, dy;
-
-	// Information of weapons left. List of pairs (name, amount).
-	
-	private HashMap<String, Integer> weapons = new HashMap<String, Integer>();
 	
 	public Tank(Game game, int x, int y, int bouncers, int bombs, int missles, double angle, int power) {
 		super(game, x, y);
@@ -46,43 +43,40 @@ public class Tank extends GameObject {
 		speedX = 0;
 		speedY = 0;
 		color = new Color(0, 0, 255);
-		int[] xPoints = {21, 42, 13};
-		int[] yPoints = {10, 11, 12};
-		//shape = new Polygon(xPoints, yPoints, 3);
+//		int[] xPoints = {21, 42, 13};
+//		int[] yPoints = {10, 11, 12};
+//		shape = new Polygon(xPoints, yPoints, 3);
 		shape = new Rectangle(x, y, 30, 30);
 		this.power = power;
 		this.angle = angle;
 		bouncersLeft = bouncers;
 		bombsLeft = bombs;
-		setMisslesLeft(missles); // -1 = Infinite
+		misslesLeft = missles; // -1 = Infinite
 		isDestroyed=false;
-
-		this.weapons.put("Bouncers", bouncers);
-		this.weapons.put("Bombs", bombs);
-		this.weapons.put("Missles", missles);
+		weapon = Weapon.MISSLE;
 	
-	}
-	
-	public HashMap<String, Integer> getWeapons() {
-		return weapons;
-	}
-	
-	public void deleteWeapon(String weapon) {
-			weapons.remove(weapon);
 	}
 
 	public void move(long deltaTime) {
-		if (x<30 && speedX<0) {
-			speedX = 0;
-		}
-		if (x>1140 && speedX>0) {
-			speedX = 0;
-		}
+//		if (x<30 && speedX<0) {
+//			speedX = 0;
+//		}
+//		if (x>1140 && speedX>0) {
+//			speedX = 0;
+//		}
 		super.move(deltaTime);
 	}
 
 	public void inCollision(GameObject other) {
 		if(other.getClass().getSimpleName().equals("Missle")) {
+			other.setIsDestroyed(true);
+			this.setIsDestroyed(true);
+		}
+		if(other.getClass().getSimpleName().equals("Bomb")) {
+			//this.setIsDestroyed(true);
+			other.inCollision(this);
+		}
+		if(other.getClass().getSimpleName().equals("Bouncer")) {
 			other.setIsDestroyed(true);
 			this.setIsDestroyed(true);
 		}
@@ -93,8 +87,8 @@ public class Tank extends GameObject {
 		}
 		
 		if(other.getClass().getSimpleName().equals("BackgroundObject")) {
-			other.setIsDestroyed(true);
-			this.setIsDestroyed(true);
+			if(speedX > 0) {x = other.getX()-shape.width;}
+			if(speedX < 0) {x = other.getX() + other.getShape().width;}
 		}
 	}
 	
@@ -174,6 +168,36 @@ public class Tank extends GameObject {
 
 	public void setDirection(String direction) {
 		this.direction = direction;
+	}
+	
+	public void changeWeapon() {
+		setWeapon(weapon.next());
+	}
+
+	public void setWeapon(Weapon weapon) {
+		this.weapon = weapon;
+	}
+
+	public Weapon getWeapon () {
+		return weapon;
+	}
+	
+	public int getWeaponAmount(Weapon weapon) {
+		switch(weapon) {
+			case MISSLE: return misslesLeft; 
+			case BOMB: return bombsLeft; 
+			case BOUNCER: return bouncersLeft; 
+			default: return 0;
+		}
+	}
+	
+	public void setWeaponAmount(Weapon weapon, int amount) {
+		switch(weapon) {
+			case MISSLE: misslesLeft = amount; break; 
+			case BOMB: bombsLeft = amount; break; 
+			case BOUNCER: bouncersLeft = amount; break; 
+			default: break;
+		}
 	}
 
 }

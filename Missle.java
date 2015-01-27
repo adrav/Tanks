@@ -7,11 +7,11 @@ import java.util.HashMap;
 
 public class Missle extends GameObject {
 
-	// abs value o velocity
-	private double velocity;
+	// abs value of velocity
+	protected double velocity;
 
 	// angle counted counterclockwise from x-axis
-	private double angle;
+	protected double angle;
 
 	private Physics ph = new Physics();
 
@@ -21,10 +21,10 @@ public class Missle extends GameObject {
 		super(game, x, y);
 		defaultColor = new Color(0, 0, 255);
 		color = defaultColor;
+		defaultShape = new Rectangle(x, y, 10, 10);
 		shape = defaultShape;
 		this.velocity = velocity;
 		this.angle = angle;
-		shape = new Rectangle(x, y, 20, 20);
 	}
 
 	public void setVelocity(double velocity) {
@@ -56,7 +56,7 @@ public class Missle extends GameObject {
 	
 	@Override
 	public void draw(Graphics2D g) {
-		g.fillOval((int)x, (int)y, (int)(shape.getWidth()/2), (int)(shape.getHeight())/2);
+		g.fillOval((int) x, (int)y, (int)(shape.getWidth()), (int)(shape.getHeight()));
 	}
 
 	@Override
