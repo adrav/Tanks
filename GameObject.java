@@ -1,56 +1,109 @@
+//: Tanks/GameObject.java
+
 package tanks;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 import java.awt.Rectangle;
 
+/** 
+ * Base class for most objects in game.
+ * @author Michal Czop
+ */
+
 abstract public class GameObject {
 	
-	// Instance of current Game used for communication
+	/** Instance of current Game used for communication. */
 	protected Game gameInstance;
 
-	// Creation of id number for each object
+	/** Unique id number for each object. */
 	protected static int idCounter;
 	protected final int id = idCounter++;
 	
+	/** Number of hits the object received. */
 	protected int timesHit;
 	
-	// Coordinates of object. Double type protects good resolution of motion.
+	/** 
+	 * Coordinates of object. Double type 
+	 * secures good resolution of motion.
+	 */
 	protected double x;
 	protected double y;
 	
-	// Default speed of Game Objects
+	/** Default speed of Game Objects in pixels/second. */
 	protected int defaultSpeedX;
 	protected int defaultSpeedY;
 	
-	// Speed in pixels/second
+	/** Speed of Game Objects in pixels/second. */
 	protected int speedX;
 	protected int speedY;
 	
-	// Color and shape for object
+	/** Color and shape of object. */
 	protected Color defaultColor;
 	protected Color color;
 	protected Rectangle defaultShape;
 	protected Rectangle shape;
 	
-	// Data used for collision check
+	/** Shapes used for collision check. */
 	protected Rectangle myShape = new Rectangle();
 	protected Rectangle otherShape = new Rectangle();
 	
-	// Status of object. Set by collision check. If destroyed, object should be 
-	// removed from ObjectHolder
+	/** 
+	 * Status of object set by collision check. If destroyed,
+	 * object should be removed from ObjectHolder.
+	 */
 	protected boolean isDestroyed = false;
 	
-	// Constructor
+	/** 
+	 * Constructor. 
+	 * @param game - game instance
+	 * @param x - position on x axis
+	 * @param y - position on y axis
+	 */
 	public GameObject(Game game, int x, int y) {
 		this.gameInstance = game;
 		this.x = x;
 		this.y = y;
 	}
 	
+	/** Performs logic actions when needed. */
 	public void performLogic() {}
 	
-	// Setters and getters for cordinates
+	/** 
+	 * Calculates coordinates dependent on time passed.
+	 * @param deltaTime - time lapsed since last iteration
+	 */
+	public void move(long deltaTime) {
+		x += (speedX*deltaTime)/1000;
+		y += (speedY*deltaTime)/1000;
+	}
+	
+	/** 
+	 * Performs collision check between game objects.
+	 * @param other - second object
+	 */
+	public boolean collisionCheck (GameObject other) {
+		myShape.setBounds((int)x, (int)y, (int)shape.getWidth(), (int)shape.getHeight());
+		otherShape.setBounds((int)other.getX(), (int)other.getY(), (int)other.getShape().getWidth(), (int)other.getShape().getHeight());
+		return myShape.intersects(otherShape);
+	}
+	
+	/**
+	 * Draws object to g.
+	 * @param g - graphics object in game
+	 */
+	public void draw(Graphics2D g) {
+		g.fillRect((int)x, (int)y, (int)shape.getWidth(), (int)shape.getHeight());
+	}
+	
+	/** 
+	 * Determines actions performed after collision 
+	 * with other objects.
+	 * @param other - GameObject which collides with this
+	*/
+	abstract void inCollision(GameObject other);
+
+	/** Setters and getters for cordinates. */
 	public void setX (double x) {
 		this.x = x;
 	}
@@ -64,7 +117,7 @@ abstract public class GameObject {
 		return y;
 	}
 	
-	// Setters and getters for speed
+	/** Setters and getters for speed. */
 	public void setDefaultSpeedX (int defaultSpeedX) {
 		this.defaultSpeedX = defaultSpeedX;
 	}
@@ -90,6 +143,7 @@ abstract public class GameObject {
 		return speedY;
 	}
 	
+	/** Setters and getters for attributes. */
 	public void setShape(Rectangle shape) {
 		this.shape = shape;
 	}
@@ -104,7 +158,6 @@ abstract public class GameObject {
 		return color;
 	}
 	
-	// Setter and getter for boolean variables
 	public void setIsDestroyed (boolean status) {
 		this.isDestroyed = status;
 	}
@@ -119,22 +172,4 @@ abstract public class GameObject {
 	public int getTimesHit() {
 		return timesHit;
 	}
-	
-	// Change coordinates dependent on time passed
-	public void move(long deltaTime) {
-		x += (speedX*deltaTime)/1000;
-		y += (speedY*deltaTime)/1000;
-	}
-	
-	public boolean collisionCheck (GameObject other) {
-		myShape.setBounds((int)x, (int)y, (int)shape.getWidth(), (int)shape.getHeight());
-		otherShape.setBounds((int)other.getX(), (int)other.getY(), (int)other.getShape().getWidth(), (int)other.getShape().getHeight());
-		return myShape.intersects(otherShape);
-	}
-	
-	public void draw(Graphics2D g) {
-		g.fillRect((int)x, (int)y, (int)shape.getWidth(), (int)shape.getHeight());
-	}
-	
-	abstract void inCollision(GameObject other);
 }

@@ -1,4 +1,7 @@
+//: Tanks/Game.java
+
 package tanks;
+
 import java.awt.Canvas;
 import java.awt.Color;
 import java.awt.Dimension;
@@ -16,10 +19,17 @@ import java.util.Random;
 import javax.swing.JFrame;
 import javax.swing.JPanel;
 
+/**
+ * Gameplay class.
+ * Extends Canvas.
+ * @author Michal Czop
+ */
+
 public class Game extends Canvas {
 
 	private BufferStrategy strategy;
 
+	/** Objects taking part in gameplay. */
 	private GameObject player;
 	private GameObject player1;
 	private GameObject player2;
@@ -29,12 +39,17 @@ public class Game extends Canvas {
 	private GameObject leftBrick2;
 	private GameObject rightBrick1;
 	private GameObject rightBrick2;
+	
+	/** Object holding references to all objects taking part in gameplay. */
 	private ObjectHolder objects;
+	
+	/** Object responsible for counting down time of round. */
 	private TimeBar timeBar; 
 	
+	/** Holder of object to delete after current iteration. */
 	private ArrayList<GameObject> objectsToDelete = new ArrayList<GameObject>();
 	
-	// Fields for status of keys
+	/** Boolean flags. */
 	private boolean leftPressed = false;
 	private boolean rightPressed = false;
 	private boolean upPressed = false;
@@ -45,30 +60,37 @@ public class Game extends Canvas {
 	private boolean zPressed = false;
 	private boolean xPressed = false;
 	private boolean gameOver = false;
-	private boolean logicNeeded = false;
 	private boolean initLevel = true;
 	private boolean newRound = true;
 	private boolean timerCounting;
 	private boolean missleFired = false;
-	private Weapon playerWeapon;
-	private long roundTime = 2000;
-	private long lastLoopTime;
+	private boolean suicide = false;
 	
-	private double velocity; 
-	int playerNumber = 2; 
+	private Weapon playerWeapon;
+	
+	int playerNumber; 
 	int windPower;
+	
+	/** Values for handling round time. */
+	private long roundTime = 15000;
+	private long lastLoopTime;
+
+	/** String object representing direction and vlocity of wind. */
 	String windImage;
 	
 	private Font bigFont = new Font("SANS_SERIF", Font.BOLD, 36);
 	private Font smallFont = new Font("SANS_SERIF", Font.ITALIC, 16);
 
+	/** State machine variable. */
 	private String state;
 	
+	/** Variable for randomizing wind velocity. */
 	private Random rand = new Random();
 
-	
+	/** Constructor. */
 	public Game() {
 		
+		/** Setting graphics for game. */
 		setBounds(0,0,1200,600);
 		setIgnoreRepaint(true);
 		requestFocus();
@@ -84,6 +106,7 @@ public class Game extends Canvas {
 		mainWindow.setResizable(false);
 		mainWindow.setVisible(true);
 
+		/** Buffer strategy for displaying graphics. */
 		createBufferStrategy(2);
 		strategy = getBufferStrategy();
 		
@@ -95,10 +118,11 @@ public class Game extends Canvas {
 			}
 		});
 
+		/** Creating game objects. */ 
 		objects = ObjectHolder.getInstance();
-		player1 = new Tank(this, 200, 550, 2, 2, 99, 315, 250);
-		player2 = new Tank(this, 980, 550, 2, 2, 99, 225, 250);
-		timeBar = new TimeBar(20, 20, 300, 20, new Color(0, 255, 0), 20000);
+		player1 = new Tank(this, 200, 564, 2, 2, 99, 315, 250);
+		player2 = new Tank(this, 980, 564, 2, 2, 99, 225, 250);
+		timeBar = new TimeBar(20, 20, 300, 20, new Color(0, 255, 0), roundTime);
 		ground = new BackgroundObject(this, 0, 580, new Rectangle (1200, 30), true);
 		ground.setColor(new Color(0, 255, 0));
 		wall = new BackgroundObject(this, 585, 330, new Rectangle (30, 250), false);
@@ -121,13 +145,13 @@ public class Game extends Canvas {
 		objects.addObject(rightBrick2);
 		timeBar.setEndOfTime(true);
 		state = "game intro";
-		windPower = 6000;
 		((Tank) player1).setDirection("right");
 		((Tank) player2).setDirection("left");
 		randomizeWindPower();
 		
 	}
 	
+	/** Internal class for handling key events. */
 	private class KeyPressedHandler extends KeyAdapter {
 		public void keyPressed(KeyEvent e) {
 			if(e.getKeyCode() == KeyEvent.VK_LEFT) { leftPressed = true; }
@@ -155,6 +179,7 @@ public class Game extends Canvas {
 		}
 	}
 	
+	/** Introducing screen of game. */
 	public void gameIntro() {
 		while(!enterPressed) {
 			Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
@@ -175,6 +200,7 @@ public class Game extends Canvas {
 		state = "game";
 	}
 	
+	/** Switching between plaers. */
 	public void changePlayer() {
 		if (playerNumber == 1) {
 			player1.setSpeedX(0);
@@ -191,10 +217,12 @@ public class Game extends Canvas {
 		missleFired = false;
 	}
 	
+	/** When tank changes its direction, mirrorPlayerAngle(Tank p) adapts parameters of turret.*/
 	public void mirrorPlayerAngle(Tank p) {
 		p.setAngle(540 - p.getAngle());
 	}
 	
+	/** Random wind velocity. */
 	public void randomizeWindPower() {
 		windPower = rand.nextInt(12) * 500 - 3000;
 		switch (windPower) {
@@ -214,21 +242,25 @@ public class Game extends Canvas {
 		}
 	}
 		
-	public void gameLoop() {
+	/** Main loop of game. */
+	public void gameLoop() throws axisException {
 
 		while (!gameOver) {
+			/** Calculations for loop timing. */
 			long deltaTime = System.currentTimeMillis() - lastLoopTime;
 			lastLoopTime = System.currentTimeMillis();
+			
+			/** Preparing main window appearance. */
 			Graphics2D g = (Graphics2D) strategy.getDrawGraphics();
 			g.setColor(Color.black);
 			g.fillRect(0,0,1200,600);
 			
-			//Change player
+			/** Switching player. */
 			if(timeBar.isEndOfTime()) {
 				changePlayer();
 			}
 			
-			//Change weapon
+			/** Changing weapon.*/
 			if(shiftPressed) {
 				((Tank) player).changeWeapon();
 				playerWeapon = (((Tank) player).getWeapon());
@@ -236,10 +268,10 @@ public class Game extends Canvas {
 				
 			}
 			
-			//Addjust size of TimeBar
+			/** Adjust size of timebar. */
 			if(!missleFired) { timeBar.adjustSizeToTimeLeft(lastLoopTime, "x"); }
 			
-			//Handle angle
+			/** Calculate angle of turret. */
 			if(((Tank) player).getDirection().equals("right")) {
 				if(upPressed && ((Tank) player).getAngle() > 270 && !missleFired) {
 					((Tank) player).setAngle(((Tank) player).getAngle() - 0.5);
@@ -257,7 +289,7 @@ public class Game extends Canvas {
 				}
 			}
 			
-			//Handle power
+			/** Calculate power of shot. */
 			if(leftPressed && ((Tank) player).getPower() > 0 && !missleFired) {
 				((Tank) player).setPower(((Tank) player).getPower()-1);
 			}
@@ -265,7 +297,7 @@ public class Game extends Canvas {
 				((Tank) player).setPower(((Tank) player).getPower()+1);
 			}
 			
-			//Handle movement of player
+			/** Handle movement of player.*/
 			player.setSpeedX(0);
 			if (zPressed && !xPressed) {
 				if(((Tank) player).getDirection().equals("right") && !missleFired) {
@@ -282,15 +314,15 @@ public class Game extends Canvas {
 				((Tank) player).setDirection("right");
 			}
 			
-			//	FIRE HANDLING
+			/** Handle fire. */
 			if (firePressed && !missleFired) {
 				if (((Tank) player).getWeaponAmount(((Tank) player).getWeapon()) > 0) {
 					if (((Tank) player).getWeapon().equals(Weapon.MISSLE)) {
-						objects.addObject(new Missle(this, (int)player.getX()+12, (int)player.getY()-50, ((Tank)player).getPower(), ((Tank) player).getAngle()));
+						objects.addObject(new Missle(this, (int)player.getX()+15, (int)player.getY()-10, ((Tank)player).getPower(), ((Tank) player).getAngle()));
 					} else if ((((Tank) player).getWeapon().equals(Weapon.BOMB))) {
-						objects.addObject(new Bomb(this, (int)player.getX()+12, (int)player.getY()-50, ((Tank)player).getPower(), ((Tank) player).getAngle()));
+						objects.addObject(new Bomb(this, (int)player.getX()+15, (int)player.getY()-10, ((Tank)player).getPower(), ((Tank) player).getAngle()));
 					} else if (((Tank) player).getWeapon().equals(Weapon.BOUNCER)) {
-						objects.addObject(new Bouncer(this, (int)player.getX()+12, (int)player.getY()-50, ((Tank)player).getPower(), ((Tank) player).getAngle()));
+						objects.addObject(new Bouncer(this, (int)player.getX()+15, (int)player.getY()-10, ((Tank)player).getPower(), ((Tank) player).getAngle()));
 					}
 					missleFired = true;
 					timerCounting = false;
@@ -298,14 +330,14 @@ public class Game extends Canvas {
 				}
 			}
 
-			// Perform movement of GameObject's
+			/** Perform movement of game objects. */
 			for (int i = 0; i<objects.getSize(); i++) {
 				if (!objects.getObject(i).getClass().getSimpleName().equals("Tank") || !missleFired) {
 					objects.getObject(i).move(deltaTime); 
 				}
 			}
 			
-			//Draw GameObject's
+			/** Draw game objects. */
 			for (int i = 0; i<objects.getSize(); i++) {
 				g.setColor(objects.getObject(i).getColor());
 				objects.getObject(i).draw(g);
@@ -313,7 +345,7 @@ public class Game extends Canvas {
 			g.setColor(timeBar.getColor());
 			timeBar.draw(g);
 			
-			// Collision check
+			/** Collision check. */
 			for (int i1 = 0; i1 < objects.getSize(); i1++) {
 				for(int i2 = i1+1; i2 < objects.getSize(); i2++) {
 					if(objects.getObject(i1).collisionCheck(objects.getObject(i2))) {
@@ -322,7 +354,7 @@ public class Game extends Canvas {
 				}	
 			}
 			
-			// Deleting of destroyed GameObject's
+			/** Deleting of destroyed game objects. */
 			for (int i = 0; i < objects.getSize(); i++) {
 				if (objects.getObject(i).getIsDestroyed()) {
 					objectsToDelete.add(objects.getObject(i));
@@ -332,12 +364,16 @@ public class Game extends Canvas {
 					if (objects.getObject(i).getClass().getSimpleName().equals("Tank")) {
 						state = "gameOver";
 						gameOver = true;
+						if (objects.getObject(i)==player) {
+							suicide = true;
+							System.out.println("suicide");
+						}
 					}
 				}
 			}
 			objects.deleteObject(objectsToDelete);
 			
-			// Draw information
+			/** Draw information in status bar. */
 			g.setColor(new Color(255, 0, 0));
 			g.drawString("angle = " + ((Tank)player).getAngle(), 350, 35);
 			g.drawString("power = " +((Tank)player).getPower(), 450, 35);
@@ -346,8 +382,9 @@ public class Game extends Canvas {
 			g.drawString("wind: " + windImage, 620, 35);
 			g.drawString("weapon: " + playerWeapon + " - " + ((Tank) player).getWeaponAmount(playerWeapon) + " left.", 720, 35);
 			
+			/** Check end condition. */
 			if (gameOver) {
-				changePlayer();
+				playerNumber = (suicide)? playerNumber : (playerNumber == 1)? 2:1;
 				g.setColor(Color.black);
 				g.fillRect(0,0,1200,600);
 				g.setColor(Color.white);
@@ -359,16 +396,18 @@ public class Game extends Canvas {
 				strategy.show();
 			}
 			
+			/** Draw graphics. */
 			g.dispose();
 			strategy.show();
 			
+			/** Wait 20ms. */
 			try { 
 				Thread.sleep(20); 
 			} catch (Exception e) {}
 		}
 	}
 
-	public static void main(String argv[]) {
+	public static void main(String args[]) throws axisException {
 		Game game = new Game();
 		while(!game.gameOver) {
 			if (game.state.equals("game")) { game.gameLoop(); }

@@ -1,3 +1,5 @@
+//: Tanks/Tank.java
+
 package tanks;
 
 import java.awt.Color;
@@ -5,75 +7,112 @@ import java.awt.Color;
 import static java.lang.Math.*;
 
 import java.awt.Graphics2D;
-import java.awt.Polygon;
 import java.awt.Rectangle;
-import java.util.HashMap;
 
+/**
+ * Game object representing tank controlled by player. 
+ * Extends GameObject.
+ * Overrides: draw(Graphics2D g), move(long deltaTime)
+ * Implements: inCollision(GameObject other)
+ * @author Michal Czop
+ */
 
 public class Tank extends GameObject {
 
-	// Value of last used power of shot
+	/** Value of last used shot power. */
 	private int power;
 
-	// Value of tangens of last used angle of turret
+	/** Value of last used angle tangens. */
 	private double angle;
 
-	// Amounts of veapons left
+	/** Amounts of weapons left. */
 	private int bouncersLeft;
 	private int bombsLeft;
-
-	// Infinite missles
 	private int misslesLeft;
 	
-	// Common for all tanks shaps
-	private Polygon leftTankShape;
-	private Polygon rightTankShape;
-	
-	private String direction;
-	private String currentWeapon;
-	
-	private Weapon weapon;
-	
+	/** Values for calculating turret length and angle. */
 	private int dx, dy;
 	
-	public Tank(Game game, int x, int y, int bouncers, int bombs, int missles, double angle, int power) {
+	/** Direction of tank movement (left/right). Determines angle of turret. */
+	private String direction;
+	
+	/** Currently chosen weapon. */
+	private Weapon weapon;
+	
+	/** 
+	 * Constructor.
+	 * @param game - game instance
+	 * @param x - position of tank on x axis
+	 * @param y - position of tank on y axis
+	 * @param bouncers - initial number of bouncers available
+	 * @param bombs - initial number of bombs available
+	 * @param missiles - initial number of missiles available
+	 * @param angle
+	 * @param power
+	 */
+	public Tank(Game game, int x, int y, int bouncers, int bombs, int missiles, double angle, int power) {
 		super(game, x, y);
 		defaultSpeedX = 100;
 		defaultSpeedY = 0;
 		speedX = 0;
 		speedY = 0;
 		color = new Color(0, 0, 255);
-//		int[] xPoints = {21, 42, 13};
-//		int[] yPoints = {10, 11, 12};
-//		shape = new Polygon(xPoints, yPoints, 3);
-		shape = new Rectangle(x, y, 30, 30);
+		shape = new Rectangle(x, y, 30, 16);
 		this.power = power;
 		this.angle = angle;
 		bouncersLeft = bouncers;
 		bombsLeft = bombs;
-		misslesLeft = missles; // -1 = Infinite
+		misslesLeft = missiles;
 		isDestroyed=false;
 		weapon = Weapon.MISSLE;
 	
 	}
 
+	/** 
+	 * Handles movement of tank. 
+	 * @param deltaTime - time lapsed since last iteration
+	 */
+	@Override
 	public void move(long deltaTime) {
-//		if (x<30 && speedX<0) {
-//			speedX = 0;
-//		}
-//		if (x>1140 && speedX>0) {
-//			speedX = 0;
-//		}
+		if (x<0 && speedX<0) {
+			speedX = 0;
+		}
+		if (x>(1200 - shape.width) && speedX>0) {
+			speedX = 0;
+		}
 		super.move(deltaTime);
 	}
+	
+	/** Draws object to Graphics2D object. */
+	@Override
+	public void draw(Graphics2D g) {
+		/** Draw tank. */
+		g.fillRect((int)x, (int)y, (int)shape.getWidth(), (int)shape.getHeight());
+		
+		/** Draw turret. */
+		if(this.direction.equals("right")) {
+			dx = (int) (power*cos(toRadians(360-angle)))/5;
+			dy = (int) (power*sin(toRadians(360-angle)))/5;
+			g.drawLine((int)x + 15, (int)y, (int)x + 15 + dx , (int)y - dy);
+		} else {
+			dx = (int) (power*cos(toRadians(angle-180)))/5;
+			dy = (int) (power*sin(toRadians(angle-180)))/5;
+			g.drawLine((int)x + 15, (int)y, (int)x + 15 - dx , (int)y - dy);
+		}
+	}
 
+	/** 
+	 * Determines actions performed after collision 
+	 * with other objects.
+	 * @param other - GameObject which collides with this
+	*/
+	@Override
 	public void inCollision(GameObject other) {
 		if(other.getClass().getSimpleName().equals("Missle")) {
 			other.setIsDestroyed(true);
 			this.setIsDestroyed(true);
 		}
 		if(other.getClass().getSimpleName().equals("Bomb")) {
-			//this.setIsDestroyed(true);
 			other.inCollision(this);
 		}
 		if(other.getClass().getSimpleName().equals("Bouncer")) {
@@ -92,20 +131,7 @@ public class Tank extends GameObject {
 		}
 	}
 	
-	public void draw(Graphics2D g) {
-		g.fillRect((int)x, (int)y, (int)shape.getWidth(), (int)shape.getHeight());
-		// Draw line
-		if(this.direction.equals("right")) {
-			dx = (int) (power*cos(toRadians(360-angle)))/5;
-			dy = (int) (power*sin(toRadians(360-angle)))/5;
-			g.drawLine((int)x + 15, (int)y, (int)x + 15 + dx , (int)y - dy);
-		} else {
-			dx = (int) (power*cos(toRadians(angle-180)))/5;
-			dy = (int) (power*sin(toRadians(angle-180)))/5;
-			g.drawLine((int)x + 15, (int)y, (int)x + 15 - dx , (int)y - dy);
-		}
-	}
-	
+	/** Getters and setters. */
 	public void setPower(int power) {
 		this.power = power;
 	}
@@ -144,22 +170,6 @@ public class Tank extends GameObject {
 
 	public void setMisslesLeft(int misslesLeft) {
 		this.misslesLeft = misslesLeft;
-	}
-
-	public Polygon getLeftTankShape() {
-		return leftTankShape;
-	}
-
-	public void setLeftTankShape(Polygon leftTankShape) {
-		this.leftTankShape = leftTankShape;
-	}
-
-	public Polygon getRightTankShape() {
-		return rightTankShape;
-	}
-
-	public void setRightTankShape(Polygon rightTankShape) {
-		this.rightTankShape = rightTankShape;
 	}
 
 	public String getDirection() {

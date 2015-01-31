@@ -1,27 +1,54 @@
+//: tanks/TimeBar.java
+
 package tanks;
 
 import java.awt.Color;
 import java.awt.Graphics2D;
 
-class TimeBar {
+/** Custom exception for reporting wrong choice of axis 
+ * in adjustSizeToTimeLeft (long currentTime, String axis). 
+ */
+
+class axisException extends Exception {
+	public axisException() {}
+	public axisException(String msg) {
+		super(msg);
+	}
+}
+
+/**
+ * Counts down the time and adjust size to milliseconds left. 
+ * When counting is finished, X or Y size of object is equals 0.
+ * 
+ * @author Micha¸ Czop
+ * 
+ */
+
+public class TimeBar {
+	
+	/** Fields */ 
 
 	private int x;
 	private int y;
+	
 	private double initLength;
 	private double initHeight;
 	private double length;
 	private double height;
-	private Color color;
+	private double sizeFactor;
+	
 	private long startTime;
 	private long time;
 	private long timeToCount;
-	private double sizeFactor;
-
+	
 	private boolean countingStarted;
 	private boolean endOfTime;
 	
-	public TimeBar(int x, int y, double length, double height, Color color, long timeToCount) {
+	private Color color;
 
+	/** Constructor */
+	
+	public TimeBar(int x, int y, double length, double height, Color color, long timeToCount) {
 		this.x = x;
 		this.y = y;
 		this.initLength = length;
@@ -29,17 +56,79 @@ class TimeBar {
 		this.length = initLength;
 		this.height = initHeight;
 		this.color = color;
-		this.startTime = startTime;
 		this.timeToCount = timeToCount;
 		this.time = timeToCount;
 		sizeFactor = 1;
 		countingStarted = false;
-		setEndOfTime(false);
-		color = new Color(0, 255, 0);
+		endOfTime = false;
+	}
+	
+	/** Methods */
+	/** 
+	 * Starts the counting process.
+	 * Sets on the starting time and turns on the flag. 
+	 */
+	public void startCounting() {
+		startTime = System.currentTimeMillis();
+		countingStarted = true;
+	}
+	
+	/**
+	 * Adjusts size of time bar to time left.
+	 * @param currentTime - current system time needed to calculate time lapsed since last iteration
+	 * @param axis - axis defining which value (x or y size) will be reduced
+	 */
+	
+	public void adjustSizeToTimeLeft (long currentTime, String axis) throws axisException {
+
+		if(countingStarted) {
+			long timeLapsed = currentTime - startTime;
+			double sizeFactor = 1.0 - (double)timeLapsed/timeToCount;
+			if (sizeFactor <= 0) { 
+				sizeFactor = 0; 
+				setEndOfTime(true);
+			}
+			try {
+				if (axis.equals("x")) {
+					this.length = initLength * sizeFactor;
+				} else if (axis.equals("y")) {
+					this.height = height * sizeFactor;	
+				}
+				else {
+					throw new axisException("TimeBar.adjustSizeToTimeLeft(long currentTime, String axis): Wrong axis chosen.");
+				}
+			} catch(axisException e) {
+				e.printStackTrace(System.out);
+			}	
+		} else { System.err.println("TimeBar.adjustSizeToTimeLeft(long currentTime, String axis): Counting not started."); } 
+	}
+
+	/**
+	 * Resets size and flags to default values.
+	 */
+	
+	public void reset() {
+
+		length = initLength;
+		height = initHeight;
+		setSizeFactor(1);
+		countingStarted = false;
+		setEndOfTime(false);		
 
 	}
 
-	// Setters and getters for cordinates
+	/**
+	 * Draw time bar
+	 * @param g
+	 */
+	
+	public void draw(Graphics2D g) {
+		g.fillRect(x, y, (int)length, (int)height);
+	}
+
+	/** 
+	 * Setters and getters for variables 
+	 */
 
 	public void setX (int x) {
 		this.x = x;
@@ -54,8 +143,6 @@ class TimeBar {
 		return y;
 	}
 
-	// Setters and getters for size
-
 	public void setLength (double length) {
 		this.length = length;
 	}
@@ -68,7 +155,6 @@ class TimeBar {
 	public double getHeight() {
 		return height;
 	}
-
 
 	public void setColor(Color color) {
 		this.color = color;
@@ -90,48 +176,6 @@ class TimeBar {
 		return timeToCount;
 	}
 
-	public void startCounting() {
-		startTime = System.currentTimeMillis();
-		countingStarted = true;
-	}
-
-	public void adjustSizeToTimeLeft (long currentTime, String axis) {
-
-		if(countingStarted) {
-			long timeLapsed = currentTime - startTime;
-			double sizeFactor = 1.0 - (double)timeLapsed/timeToCount;
-			if (sizeFactor <= 0) { 
-				sizeFactor = 0; 
-				setEndOfTime(true);
-			}
-
-			if (axis.equals("x")) {
-
-				this.length = initLength * sizeFactor;
-			
-			} else if (axis.equals("y")) {
-
-				this.height = height * sizeFactor;
-
-			} else {}	
-	
-		} else { System.out.println("Counting not started."); }  //UWAGA DOPISAŒ OBLUSGE BLEDU
-	}
-
-	public void reset() {
-
-		length = initLength;
-		height = initHeight;
-		sizeFactor = 1;
-		countingStarted = false;
-		setEndOfTime(false);		
-
-	}
-
-	public void draw(Graphics2D g) {
-		g.fillRect(x, y, (int)length, (int)height);
-	}
-
 	public boolean isEndOfTime() {
 		return endOfTime;
 	}
@@ -139,5 +183,20 @@ class TimeBar {
 	public void setEndOfTime(boolean endOfTime) {
 		this.endOfTime = endOfTime;
 	}
-	
+
+	public long getTime() {
+		return time;
+	}
+
+	public void setTime(long time) {
+		this.time = time;
+	}
+
+	public double getSizeFactor() {
+		return sizeFactor;
+	}
+
+	public void setSizeFactor(double sizeFactor) {
+		this.sizeFactor = sizeFactor;
+	}
 }

@@ -1,35 +1,55 @@
+//: Tanks/Physics.java
+
 package tanks;
 
 import static java.lang.Math.*;
-
 import java.util.HashMap;
+
+/**
+ * Class for calculating physics.
+ * @author Michal Czop
+ */
 
 public class Physics {
 
-	// variables - initial conditions
+	/** Variables - initial conditions */
+
+	/** Initial velocity in axis x. */
 	private double v0X;
+
+	/** Initial velocity in axis y. */
 	private double v0Y;
+
+	/** Initial abs value of velocity. */
 	private double v0;
+
+	/** Initial value of angle. */
 	private double startAngle;
 
-	// variables - end conditions
+	/** Variables - end conditions */
 	private double vX;
 	private double vY;
 	private double v;
 	private double angle;
-	private double range;
-
+	
+	/** Distance moved in axis x. */
 	private double deltaX;
+
+	/** Distance moved in axis y. */
 	private double deltaY;
 
-	// physics constants
+	/** Physics constants. */
 	private final double g = 100; // [m/s^2]
 
-	// calculates power, angle and movement since in current moment
-	// angle in degrees is measured counterclockwise from x axis
-	// time period conted in miliseconds
-	// 1m = 20 pixels
-
+	/** 
+	 * Calculates movement variables. Returns HashMap
+	 * containing velocity, angle, delta x and delta y after
+	 * time period.
+	 * @param startVelocity - initial value of velocity
+	 * @param startAngle - initial value of angle
+	 * @param windForce - horizontal force of wind
+	 * @param timePeriod - time value for calculations
+	 */
 	public HashMap advancedTrajectory (double startVelocity, double startAngle, double windForce, long timePeriod) {
 
 		HashMap<String, Double> endConditions = new HashMap<String, Double>();
@@ -37,11 +57,11 @@ public class Physics {
 		double mass = 100;//[kg];
 		double windAcc = windForce/mass;
 	
-		// Start conditions - SPRAWDZONE
+		/** Start conditions. */
 		v0X = startVelocity*cos(toRadians(startAngle));
 		v0Y = startVelocity*sin(toRadians(startAngle));
 
-		// End conditions - SPRAWDZONE
+		/** End conditions. */
 		vX = v0X - windAcc*time;
 		vY = v0Y + g*time;
 		deltaX = v0X*time - (windAcc*pow(time, 2))/2;
@@ -59,22 +79,28 @@ public class Physics {
 		endConditions.put("deltaX", deltaX);
 		endConditions.put("deltaY", deltaY);
 
-		// return HashMap<new velocity, new angle, deltaX, deltaY> 
 		return endConditions;
 	}
 
-	// trajcectory in perfect vacum
+	/** 
+	 * Calculates movement variables in perfect vacuum.
+	 * Returns HashMap containing velocity, angle, 
+	 * delta x and delta y after time period.
+	 * @param startVelocity - initial value of velocity
+	 * @param startAngle - initial value of angle
+	 * @param timePeriod - time value for calculations
+	 */
 	
 	public HashMap simpleTrajectory (double startVelocity, double startAngle, long timePeriod) {
 
 		HashMap<String, Double> endConditions = new HashMap<String, Double>();
 		double time = (double)timePeriod/1000;
 	
-		// Start conditions - SPRAWDZONE
+		/** Start conditions. */
 		v0X = startVelocity*cos(toRadians(startAngle));
 		v0Y = startVelocity*sin(toRadians(startAngle));
 
-		// End conditions - SPRAWDZONE
+		/** End conditions. */
 		vX = v0X;
 		vY = v0Y + g*time;
 		deltaX = v0X*time;
@@ -92,40 +118,7 @@ public class Physics {
 		endConditions.put("deltaX", deltaX);
 		endConditions.put("deltaY", deltaY);
 
-		// return HashMap<new velocity, new angle, deltaX, deltaY> 
 		return endConditions;
 	}
 }
 
-
-//// testy
-//
-//	public static void main(String[] args) {
-//		
-//		Physics ph = new Physics();
-//		HashMap<String, Double> result = new HashMap<String, Double>();
-//		/*
-//		result = ph.simpleTrajectory(10, 45, 1);
-//		System.out.println("deltaX = " + result.get("deltaX"));	
-//		System.out.println("deltaY = " + result.get("deltaY"));
-//		System.out.println("new velocity = " + result.get("velocity"));
-//		System.out.println("new angle = " + result.get("angle"));
-//		*/
-//
-//		double[][] results = new double[15][2];
-//		for (int i = 0; i < 15; i++) {
-//			System.out.print("[");
-//
-//			result = ph.advancedTrajectoryResistance(30, 45, i*500 + 500);
-//			results[i][0] = result.get("deltaX");
-//			results[i][1] = result.get("deltaY");
-//
-//			System.out.println("[" + results[i][0] + ", " + results[i][1] + "]");
-//		}
-//		System.out.println("], ");
-//		
-//		System.out.println("pozdROCK!");
-//
-//
-//
-//	}
